@@ -1,6 +1,9 @@
 package homework;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 
@@ -105,7 +108,9 @@ public class ComplexExamples {
         if (RAW_DATA != null) {
             Map<String, Long> sortedMap = Arrays.stream(RAW_DATA)
                     .distinct()
+                    .sorted(Comparator.comparing(Person::getName).thenComparing(Person::getId))
                     .collect(groupingBy(Person::getName, counting()));
+
 
             for (Map.Entry<String, Long> pair : sortedMap.entrySet()) {
                 System.out.println("Key: " + pair.getKey());
@@ -174,18 +179,16 @@ public class ComplexExamples {
     public static int[] findPair(int[] array, int sum) {
         if (array == null || sum == 0) return null;
 
-        int[] resultArray = new int[2];
+        Map<Integer, Integer>  map = new HashMap<>();
 
-        for (int i = 0; i < array.length; i++) {
-            for (int j = 0; j < array.length; j++) {
-                if (i == j) continue;
-                int guess = array[i] + array[j];
-                if (guess == sum) {
-                    resultArray[0] = array[j];
-                    resultArray[1] = array[i];
-                    break;
-                }
+        int[] resultArray = new int[2];
+        for (int i : array) {
+            if (map.containsKey(i)) {
+                resultArray[0] = map.get(i);
+                resultArray[1] = i;
+                break;
             }
+            map.put(sum - i, i);
         }
 
         return resultArray;
@@ -194,47 +197,20 @@ public class ComplexExamples {
     public static boolean fuzzySearch(String word, String data) {
         if (word == null || data == null) return false;
 
-        //Если слова изначально равны возвращаем true
-        if (word.equals(data)) return true;
-
-        char[] wordArray = word.toCharArray();
+        List<Character> wordList = word.chars()
+                .mapToObj(ch -> (char) ch)
+                .collect(toList());
         char[] dataArray = data.toCharArray();
 
-        //Проходимся по массивам и ищем совпадения
-        List<Integer> indexList = new ArrayList<>();
-        for (int i = 0; i < wordArray.length; i++) {
-            for (int j = 0; j < dataArray.length; j++) {
-                if (wordArray[i] == dataArray[j]) {
-                    /*
-                    При совпадении - добавляем индекс элемента в лист, а сам элемент
-                    меняем на произвольный символ, чтобы избежать дублей
-                     */
-                    indexList.add(j);
-                    dataArray[j] = '?';
-                    break;
-                }
-            }
-        }
-
-        /*
-        Если длина листа индексов и кол-ва букв в заданном слове
-        не совпадает - возвращаем false
-        */
-        if (indexList.size() != wordArray.length) return false;
-
-        /*
-        Перебираем лист и проверяем, что все числа стоят друг за другом,
-        то есть, по возрастанию, это подтверждает наличие заданного
-        слова в необходимом порядке
-         */
-        boolean flag = true;
-        for (int i = 1; i < indexList.size(); i++) {
-            if (indexList.get(i - 1) >= indexList.get(i)) {
-                flag = false;
+        StringBuilder result = new StringBuilder();
+        for (char ch : dataArray) {
+            if (result.length() == word.length())
                 break;
-            }
+
+            if (wordList.contains(ch))
+                result.append(ch);
         }
 
-        return flag;
+        return word.equals(result.toString());
     }
 }
